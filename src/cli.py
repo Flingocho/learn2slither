@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 from src.agent import AgentConfig, QLearningAgent
 from src.config import EPSILON_START
 from src.environment import SnakeEnvironment
 from src.trainer import Trainer
+from src.gui_menu import show_menu
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -95,6 +97,12 @@ def main(argv: list[str] | None = None) -> int:
     Returns:
         Exit code (0 for success).
     """
+    if argv is None:
+        argv = sys.argv[1:]
+
+    if argv and argv[0] == "bonus":
+        argv = show_menu()
+
     parser = build_parser()
     args = parser.parse_args(argv)
 
@@ -145,10 +153,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.save_model is not None:
         agent.save(args.save_model)
 
-    if not args.quiet:
-        print(
-            f"Finished {result.episodes} episodes | victories={result.victories} | "
-            f"average_score={result.average_score:.2f} | best_score={result.best_score}"
-        )
+    print(
+        f"Finished {result.episodes} episodes | victories={result.victories} | "
+        f"average_score={result.average_score:.2f} | best_score={result.best_score}"
+    )
 
     return 0

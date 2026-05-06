@@ -140,7 +140,7 @@ class Trainer:
                 if learn:
                     self.agent.decay_exploration()
 
-                if episode - last_checkpoint >= checkpoint and checkpoint > 0:
+                if not self.quiet and episode - last_checkpoint >= checkpoint and checkpoint > 0:
                     avg_score = total_score / episode
                     progress_pct = (episode / episodes) * 100
                     epsilon = self.agent.config.epsilon

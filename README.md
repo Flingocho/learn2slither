@@ -14,9 +14,10 @@ A modular reinforcement learning implementation of the classic Snake game with a
 
 <div align="center">
 
-<img src="media/learn2slither-demo.gif" width="300" alt="Learn2Slither Demo">
-
-*The trained agent playing with heuristic-guided exploration enabled, achieving consistent high scores.*
+| Gameplay Demo | Configuration Menu |
+|:---:|:---:|
+| <img src="media/learn2slither-demo.gif" width="300" alt="Gameplay Demo"> | <img src="media/menu_screenshot.png" width="300" alt="Configuration Menu"> |
+| *Agent playing with heuristics enabled* | *Interactive configuration interface* |
 
 </div>
 
@@ -75,6 +76,36 @@ python3 -m pip install -r requirements.txt
 ```bash
 ./snake -l models/qtable_150k_final.json -s 5 -d -v on -b 20
 ```
+
+### Interactive Configuration Menu (Bonus)
+
+Launch a graphical menu to configure all training options:
+
+```bash
+./snake bonus
+```
+
+<div align="center">
+
+<img src="media/menu_screenshot.png" width="600" alt="Configuration Menu">
+
+</div>
+
+This opens a visual Pygame interface where you can:
+- **Select pre-trained models** from your `models/` folder
+- **Configure the number of training sessions** with interactive text input
+- **Enable/disable options** with checkboxes:
+  - Visualization (graphical display)
+  - Step-by-step mode (pause after each step)
+  - Quiet mode (suppress progress output)
+  - Heuristics (guided exploration)
+  - Model saving after training
+  - Evaluation mode (no learning)
+- **Set hyperparameters** (learning rate, epsilon, discount factor, epsilon decay)
+- **Specify custom board size** for gameplay
+- **Hover effects** and visual feedback for all interactive elements
+
+The menu maintains the same visual style as the game (dark blue theme) for a cohesive experience.
 
 ## Usage Examples
 
@@ -231,6 +262,29 @@ When enabled, the agent uses domain knowledge to improve exploration and decisio
 - NumPy 1.26.0+
 
 If no graphical backend is available, use `--no-render` for headless training.
+
+## Bonus Features
+
+This project implements several bonus features beyond the mandatory requirements:
+
+### 1. **Higher Snake Length Achievement** ✅
+- Best model (`qtable_150k_final.json`) achieves a score of **43** consistently
+- Exceeds the bonus requirement of 35+ score
+
+### 2. **Visually Stunning Display** ✅
+- Interactive graphical menu (`./snake bonus`) built with Pygame
+- Matches the game's visual style with dark blue theme
+- Model selector with list of available trained models
+- Configurable checkboxes for all training options
+- Text input fields for custom values (episodes, learning rate, etc.)
+- Real-time statistics panel during training
+- Episode metrics with progress visualization
+
+### 3. **Configurable Board Size** ✅
+- Use `-b` or `--board-size` argument to change board dimensions
+- Pre-trained models work across different board sizes
+- Example: `./snake -l models/qtable_150k_final.json -s 5 -d -v on -b 20`
+- Supports boards from 10x10 to 20x20+
 
 ---
 
