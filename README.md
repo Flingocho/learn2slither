@@ -144,6 +144,58 @@ src/
 └── __init__.py       # Package initialization
 ```
 
+## Reinforcement Learning Fundamentals
+
+### What is Q-Learning?
+
+**Q-Learning** is a fundamental reinforcement learning algorithm that learns the value of actions in different states. Instead of trying to predict what the agent should do, Q-learning learns how "good" each action is in each situation.
+
+The core concept:
+- **State (S):** A representation of the current game situation (where is the snake, where are the apples?)
+- **Action (A):** A decision the agent can make (move UP, DOWN, LEFT, RIGHT)
+- **Reward (R):** A numeric signal indicating how good/bad the action was
+- **Q-Value:** A number representing the expected future reward for taking action A in state S
+
+### The Q-Table
+
+The **Q-Table** is a lookup table where rows represent states and columns represent actions. Each cell stores a Q-value:
+
+```
+        UP    DOWN   LEFT   RIGHT
+State1  0.5   -0.2   0.1    0.8
+State2  0.3    0.6  -0.1    0.4
+State3 -0.5    0.2   0.9   -0.3
+...
+```
+
+When the agent encounters a state, it looks up that row in the Q-table and picks the action with the highest Q-value. This is called **exploitation** (using knowledge).
+
+### Learning Process
+
+The agent learns by updating Q-values using the **Q-Learning Formula**:
+
+```
+Q(s, a) ← Q(s, a) + α[r + γ max Q(s', a') - Q(s, a)]
+```
+
+Where:
+- `α` (alpha) = **Learning Rate**: How much to update the Q-value (0-1). Higher = faster learning, lower = more conservative
+- `γ` (gamma) = **Discount Factor**: How much to value future rewards (0-1). Lower = focus on immediate rewards, higher = consider long-term strategy
+- `r` = Immediate reward received
+- `max Q(s', a')` = Best possible Q-value in the next state
+
+### Exploration vs. Exploitation
+
+The agent must balance:
+- **Exploitation:** Using what it already knows works (pick highest Q-value)
+- **Exploration:** Trying new actions to discover better strategies (pick random action)
+
+This project uses **Epsilon-Greedy**:
+- With probability ε (epsilon): pick a random action (explore)
+- With probability 1-ε: pick the best known action (exploit)
+
+Epsilon starts high (1.0 = always explore) and decays over time, eventually becoming mostly exploitation.
+
 ## How It Works
 
 1. **State Representation:** The agent observes the board through a compressed state space:
