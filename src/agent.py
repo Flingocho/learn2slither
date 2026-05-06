@@ -5,7 +5,7 @@ import json
 import random
 from pathlib import Path
 
-from snake_rl.config import (
+from src.config import (
     ACTION_NAMES,
     DISCOUNT_FACTOR,
     EPSILON_DECAY,
@@ -27,11 +27,31 @@ class AgentConfig:
 
 
 class QLearningAgent:
+    """Q-learning agent for Snake reinforcement learning.
+
+    Implements tabular Q-learning with epsilon-greedy exploration and optional
+    heuristic-guided action selection.
+    """
+
     def __init__(self, config: AgentConfig | None = None) -> None:
+        """Initialize the Q-learning agent.
+
+        Args:
+            config: Agent configuration. Uses default if None.
+        """
         self.config = config or AgentConfig()
         self.q_table: dict[str, list[float]] = {}
 
     def choose_action(self, state: tuple[str, ...], explore: bool = True) -> int:
+        """Select an action using epsilon-greedy or heuristic strategy.
+
+        Args:
+            state: Current game state representation.
+            explore: If True, use epsilon-greedy exploration.
+
+        Returns:
+            Action index (0: UP, 1: LEFT, 2: DOWN, 3: RIGHT).
+        """
         state_key = self._encode_state(state)
         if not self.config.heuristics_enabled:
             if explore and self.config.epsilon > 0 and random.random() < self.config.epsilon:
@@ -70,6 +90,15 @@ class QLearningAgent:
         next_state: tuple[str, ...],
         done: bool,
     ) -> None:
+        """Update Q-values using the Q-learning update rule.
+
+        Args:
+            state: Current game state.
+            action: Action taken.
+            reward: Reward received.
+            next_state: Resulting state.
+            done: Whether the episode terminated.
+        """
         if not self.config.learning_enabled:
             return
 
@@ -85,12 +114,18 @@ class QLearningAgent:
         current_q[action] += self.config.learning_rate * (target - current_q[action])
 
     def decay_exploration(self) -> None:
+        """Reduce epsilon to decrease exploration over time."""
         self.config.epsilon = max(
             self.config.epsilon_min,
             self.config.epsilon * self.config.epsilon_decay,
         )
 
     def save(self, file_path: str | Path) -> None:
+        """Save the agent's configuration and Q-table to JSON.
+
+        Args:
+            file_path: Path to save the model.
+        """
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
@@ -101,6 +136,11 @@ class QLearningAgent:
         path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
     def load(self, file_path: str | Path) -> None:
+        """Load the agent's configuration and Q-table from JSON.
+
+        Args:
+            file_path: Path to the saved model.
+        """
         path = Path(file_path)
         payload = json.loads(path.read_text(encoding="utf-8"))
         config_data = payload.get("config", {})
@@ -109,10 +149,12 @@ class QLearningAgent:
 
     @staticmethod
     def _encode_state(state: tuple[str, ...]) -> str:
+        """Convert state tuple to a string key for Q-table lookup."""
         return "|".join(state)
 
     @staticmethod
     def _extract_last_action(state: tuple[str, ...]) -> int:
+        """Extract the last action from the state representation."""
         last_part = state[-1]
         if last_part.startswith("A:"):
             try:

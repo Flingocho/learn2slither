@@ -5,7 +5,7 @@ from collections import deque
 import random
 from typing import Iterable
 
-from snake_rl.config import (
+from src.config import (
     ACTIONS,
     ACTION_NAMES,
     BOARD_SIZE,
@@ -22,6 +22,15 @@ from snake_rl.config import (
 
 @dataclass(frozen=True)
 class StepResult:
+    """Result of a single step in the Snake environment.
+
+    Attributes:
+        state: Current game state representation.
+        reward: Reward for the action taken.
+        done: Whether the episode terminated.
+        info: Additional information (reason for termination, etc).
+    """
+
     state: tuple[str, ...]
     reward: float
     done: bool
@@ -29,7 +38,19 @@ class StepResult:
 
 
 class SnakeEnvironment:
+    """Snake game environment for reinforcement learning.
+
+    Manages the game state, apple spawning, collision detection, and state
+    representation for the Q-learning agent.
+    """
+
     def __init__(self, heuristics_enabled: bool = False, board_size: int | None = None) -> None:
+        """Initialize the Snake environment.
+
+        Args:
+            heuristics_enabled: Enable heuristic-based state features.
+            board_size: Board dimensions (NxN). Uses default if None.
+        """
         self.board_size = board_size if board_size is not None else BOARD_SIZE
         self.snake: list[tuple[int, int]] = []
         self.green_apples: set[tuple[int, int]] = set()
@@ -45,6 +66,14 @@ class SnakeEnvironment:
         self.reset()
 
     def reset(self, seed: int | None = None) -> tuple[str, ...]:
+        """Reset the environment to start a new episode.
+
+        Args:
+            seed: Random seed for reproducibility.
+
+        Returns:
+            Initial game state.
+        """
         if seed is not None:
             random.seed(seed)
 
@@ -63,9 +92,18 @@ class SnakeEnvironment:
 
     @property
     def head(self) -> tuple[int, int]:
+        """Get the head position of the snake."""
         return self.snake[0]
 
     def step(self, action: int) -> StepResult:
+        """Execute one game step with the given action.
+
+        Args:
+            action: Action index (0: UP, 1: LEFT, 2: DOWN, 3: RIGHT).
+
+        Returns:
+            StepResult with new state, reward, done flag, and info.
+        """
         if self.done:
             return StepResult(self.get_state(), 0.0, True, {"reason": self.game_over_reason})
 
@@ -147,9 +185,9 @@ class SnakeEnvironment:
                     break
             discretized_distance = self._discretize_distance(distance)
             state_parts.append(f"{symbol}:{discretized_distance}")
-        
+
         if self.heuristics_enabled:
-            # Dirección a la manzana verde más cercana
+            # Direction to nearest green apple
             direction_to_food = self._direction_to_nearest_green()
             state_parts.append(f"F:{direction_to_food}")
 
@@ -160,38 +198,38 @@ class SnakeEnvironment:
             state_parts.append(f"GX:{food_dx}")
             state_parts.append(f"GY:{food_dy}")
 
-            # Agregar la última acción realizada como parte del estado
+            # Add the last action taken as part of the state
             state_parts.append(f"A:{self.last_action}")
         return tuple(state_parts)
 
     def _direction_to_nearest_green(self) -> int:
-        """Retorna la dirección (0-3) hacia la manzana verde más cercana, o -1 si no hay."""
+        """Returns the direction (0-3) towards the nearest green apple, or -1 if none."""
         if not self.green_apples:
             return -1
-        
+
         hx, hy = self.head
         nearest = None
         min_dist = float('inf')
-        
+
         for gx, gy in self.green_apples:
             dist = abs(gx - hx) + abs(gy - hy)
             if dist < min_dist:
                 min_dist = dist
                 nearest = (gx, gy)
-        
+
         if nearest is None:
             return -1
-        
+
         gx, gy = nearest
         dx = gx - hx
         dy = gy - hy
-        
-        # Determinar la dirección general
+
+        # Determine general direction
         # 0=UP, 1=LEFT, 2=DOWN, 3=RIGHT
         if abs(dy) > abs(dx):
-            return 0 if dy < 0 else 2  # UP o DOWN
+            return 0 if dy < 0 else 2  # UP or DOWN
         else:
-            return 1 if dx < 0 else 3  # LEFT o RIGHT
+            return 1 if dx < 0 else 3  # LEFT or RIGHT
 
     def _distance_to_nearest_green(self, origin: tuple[int, int]) -> int | None:
         if not self.green_apples:

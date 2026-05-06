@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pygame
 
-from snake_rl.config import (
+from src.config import (
     BACKGROUND,
     BOARD_BG,
     CELL_SIZE,
@@ -17,7 +17,6 @@ from snake_rl.config import (
     RED_APPLE,
     SNAKE_BODY,
     SNAKE_HEAD,
-    SNAKE_OUTLINE,
     SUBTEXT,
     TEXT,
     WARNING,
@@ -26,6 +25,22 @@ from snake_rl.config import (
 
 @dataclass
 class RenderSnapshot:
+    """Data for rendering a single game frame.
+
+    Attributes:
+        episode: Current episode number.
+        step: Current step within episode.
+        score: Current game score.
+        epsilon: Current exploration rate.
+        speed_label: Render speed label.
+        action_name: Last action taken.
+        reward: Reward for the last action.
+        state: Current game state.
+        vision: Vision/observation representation.
+        reason: Reason for game over (if done).
+        paused: Whether the game is paused.
+    """
+
     episode: int
     step: int
     score: int
@@ -40,7 +55,14 @@ class RenderSnapshot:
 
 
 class SnakeRenderer:
+    """Renders the Snake game using Pygame."""
+
     def __init__(self, board_size: int = 10) -> None:
+        """Initialize the renderer.
+
+        Args:
+            board_size: Board dimensions (NxN).
+        """
         pygame.init()
         self.board_size = board_size
         self.window_width = board_size * CELL_SIZE + MARGIN * 2
@@ -53,15 +75,26 @@ class SnakeRenderer:
         self.font_small = pygame.font.SysFont("dejavusans", 16)
 
     def close(self) -> None:
+        """Clean up Pygame resources."""
         pygame.quit()
 
     def pump_events(self) -> bool:
+        """Check for window close event.
+
+        Returns:
+            False if window was closed, True otherwise.
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
         return True
 
     def wait_for_step(self) -> bool:
+        """Wait for user input to advance to the next step.
+
+        Returns:
+            False if window was closed, True if user pressed a key/button.
+        """
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -74,6 +107,12 @@ class SnakeRenderer:
             self.clock.tick(30)
 
     def render(self, env, snapshot: RenderSnapshot) -> None:
+        """Render a single frame of the game.
+
+        Args:
+            env: Snake environment with current game state.
+            snapshot: Game state snapshot for rendering.
+        """
         self.screen.fill(BACKGROUND)
         self._draw_panel(snapshot)
         self._draw_board(env)
@@ -106,11 +145,21 @@ class SnakeRenderer:
             surface = self.font_body.render(text, True, TEXT)
             self.screen.blit(surface, (self.window_width // 2 + 24, 52 + index * 24))
 
-        reward = self.font_body.render(f"Reward: {snapshot.reward:+.2f}", True, HIGHLIGHT if snapshot.reward >= 0 else WARNING)
+        reward_color = HIGHLIGHT if snapshot.reward >= 0 else WARNING
+        reward = self.font_body.render(
+            f"Reward: {snapshot.reward:+.2f}", True, reward_color
+        )
         self.screen.blit(reward, (MARGIN, 120))
 
-        status_text = snapshot.reason if snapshot.reason else ("Paused" if snapshot.paused else "Running")
-        status_color = WARNING if snapshot.reason else (SUBTEXT if snapshot.paused else TEXT)
+        if snapshot.reason:
+            status_text = snapshot.reason
+        elif snapshot.paused:
+            status_text = "Paused"
+        else:
+            status_text = "Running"
+        status_color = WARNING if snapshot.reason else (
+            SUBTEXT if snapshot.paused else TEXT
+        )
         status = self.font_body.render(f"Status: {status_text}", True, status_color)
         self.screen.blit(status, (self.window_width // 2 + 24, 120))
 

@@ -2,13 +2,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from snake_rl.agent import QLearningAgent
-from snake_rl.config import ACTION_NAMES, SPEED_PRESETS
-from snake_rl.environment import SnakeEnvironment
+from src.agent import QLearningAgent
+from src.config import ACTION_NAMES, SPEED_PRESETS
+from src.environment import SnakeEnvironment
 
 
 @dataclass
 class TrainingResult:
+    """Results from a training session.
+
+    Attributes:
+        episodes: Number of episodes completed.
+        victories: Number of episodes with score >= 10.
+        average_score: Average score across all episodes.
+        best_score: Highest score achieved.
+    """
+
     episodes: int
     victories: int
     average_score: float
@@ -16,6 +25,7 @@ class TrainingResult:
 
 
 class Trainer:
+    """Manages training episodes and rendering for the Snake RL agent."""
     def __init__(
         self,
         env: SnakeEnvironment,
@@ -25,6 +35,16 @@ class Trainer:
         speed: str | int = "human",
         quiet: bool = False,
     ) -> None:
+        """Initialize the trainer.
+
+        Args:
+            env: Snake game environment.
+            agent: Q-learning agent.
+            render: Whether to render episodes.
+            step_mode: If True, wait for input between steps.
+            speed: Render speed (preset name or milliseconds).
+            quiet: If True, minimize console output.
+        """
         self.env = env
         self.agent = agent
         self.render_enabled = render
@@ -35,7 +55,7 @@ class Trainer:
         self.RenderSnapshot = None
         if render:
             try:
-                from snake_rl.renderer import RenderSnapshot, SnakeRenderer
+                from src.renderer import RenderSnapshot, SnakeRenderer
             except ImportError as exc:
                 raise RuntimeError(
                     "Graphical rendering requested but pygame is not installed. Use --no-render for headless training."
@@ -46,6 +66,16 @@ class Trainer:
         self.running = True
 
     def run(self, episodes: int, learn: bool = True, epsilon_explore: bool = True) -> TrainingResult:
+        """Run training for a specified number of episodes.
+
+        Args:
+            episodes: Number of episodes to train.
+            learn: If True, update the Q-table. If False, just evaluate.
+            epsilon_explore: If True, use epsilon-greedy exploration.
+
+        Returns:
+            TrainingResult with statistics about the training session.
+        """
         victories = 0
         total_score = 0
         best_score = 0
@@ -113,19 +143,29 @@ class Trainer:
                 if episode - last_checkpoint >= checkpoint and checkpoint > 0:
                     avg_score = total_score / episode
                     progress_pct = (episode / episodes) * 100
-                    print(f"[{progress_pct:5.1f}%] Ep {episode:5d} | Best: {best_score:2d} | Avg: {avg_score:5.2f} | Wins: {victories:3d} | ε: {self.agent.config.epsilon:.3f}")
+                    epsilon = self.agent.config.epsilon
+                    print(
+                        f"[{progress_pct:5.1f}%] Ep {episode:5d} | Best: {best_score:2d} | "
+                        f"Avg: {avg_score:5.2f} | Wins: {victories:3d} | ε: {epsilon:.3f}"
+                    )
                     last_checkpoint = episode
 
             average_score = total_score / max(episodes, 1)
             print("\n" + "="*70)
-            print(f"TRAINING COMPLETE")
+            print("TRAINING COMPLETE")
             print(f"{'Episodes:':<20} {episodes}")
             print(f"{'Best Score:':<20} {best_score}")
             print(f"{'Average Score:':<20} {average_score:.2f}")
             print(f"{'Victories (≥10):':<20} {victories}")
-            print(f"{'Final ε (epsilon):':<20} {self.agent.config.epsilon:.3f}")
+            epsilon = self.agent.config.epsilon
+            print(f"{'Final ε (epsilon):':<20} {epsilon:.3f}")
             print("="*70 + "\n")
-            return TrainingResult(episodes=episodes, victories=victories, average_score=average_score, best_score=best_score)
+            return TrainingResult(
+                episodes=episodes,
+                victories=victories,
+                average_score=average_score,
+                best_score=best_score
+            )
         finally:
             if self.renderer is not None:
                 self.renderer.close()
@@ -139,4 +179,3 @@ class Trainer:
         if speed not in SPEED_PRESETS:
             speed = "human"
         return speed, SPEED_PRESETS[speed]
-
