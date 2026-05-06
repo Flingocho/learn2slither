@@ -125,7 +125,7 @@ class SnakeEnvironment:
         will_shrink = next_head in self.red_apples
 
         body_collision = next_head in self.snake
-        if body_collision and not (not will_grow and next_head == self.snake[-1]):
+        if body_collision and (will_grow or next_head != self.snake[-1]):
             return self._end_episode(next_head, reward + DEATH_REWARD, "hit_self")
 
         self.snake.insert(0, next_head)
@@ -197,62 +197,51 @@ class SnakeEnvironment:
             food_dx, food_dy = self._relative_food_vector()
             state_parts.append(f"GX:{food_dx}")
             state_parts.append(f"GY:{food_dy}")
-
-            # Add the last action taken as part of the state
             state_parts.append(f"A:{self.last_action}")
         return tuple(state_parts)
 
-    def _direction_to_nearest_green(self) -> int:
-        """Returns the direction (0-3) towards the nearest green apple, or -1 if none."""
+    def _nearest_green_apple(self) -> tuple[int, int] | None:
+        """Find nearest green apple position from head, or None if no apples."""
         if not self.green_apples:
-            return -1
-
+            return None
         hx, hy = self.head
-        nearest = None
-        min_dist = float('inf')
+        return min(
+            self.green_apples,
+            key=lambda cell: abs(cell[0] - hx) + abs(cell[1] - hy),
+        )
 
-        for gx, gy in self.green_apples:
-            dist = abs(gx - hx) + abs(gy - hy)
-            if dist < min_dist:
-                min_dist = dist
-                nearest = (gx, gy)
-
+    def _direction_to_nearest_green(self) -> int:
+        """Returns direction (0-3) towards nearest green apple, or -1 if none."""
+        nearest = self._nearest_green_apple()
         if nearest is None:
             return -1
 
         gx, gy = nearest
+        hx, hy = self.head
         dx = gx - hx
         dy = gy - hy
 
-        # Determine general direction
-        # 0=UP, 1=LEFT, 2=DOWN, 3=RIGHT
         if abs(dy) > abs(dx):
-            return 0 if dy < 0 else 2  # UP or DOWN
+            return 0 if dy < 0 else 2
         else:
-            return 1 if dx < 0 else 3  # LEFT or RIGHT
+            return 1 if dx < 0 else 3
 
     def _distance_to_nearest_green(self, origin: tuple[int, int]) -> int | None:
-        if not self.green_apples:
+        """Distance to nearest green apple from origin, or None if no apples."""
+        nearest = self._nearest_green_apple()
+        if nearest is None:
             return None
-
         ox, oy = origin
-        nearest_distance = None
-        for gx, gy in self.green_apples:
-            distance = abs(gx - ox) + abs(gy - oy)
-            if nearest_distance is None or distance < nearest_distance:
-                nearest_distance = distance
-        return nearest_distance
+        gx, gy = nearest
+        return abs(gx - ox) + abs(gy - oy)
 
     def _relative_food_vector(self) -> tuple[int, int]:
-        if not self.green_apples:
+        """Vector from head to nearest green apple, or (0,0) if none."""
+        nearest = self._nearest_green_apple()
+        if nearest is None:
             return 0, 0
-
+        fx, fy = nearest
         hx, hy = self.head
-        nearest_food = min(
-            self.green_apples,
-            key=lambda cell: abs(cell[0] - hx) + abs(cell[1] - hy),
-        )
-        fx, fy = nearest_food
         return fx - hx, fy - hy
 
     def describe_vision(self) -> list[str]:
@@ -344,15 +333,6 @@ class SnakeEnvironment:
         line.extend(self._cell_symbol(cell) for cell in self._ray_positions(direction))
         line.append("W")
         return "".join(line)
-
-    def _ray_signature(self, direction: int) -> str:
-        distance = 0
-        for cell in self._ray_positions(direction):
-            distance += 1
-            symbol = self._cell_symbol(cell)
-            if symbol != "0":
-                return f"{symbol}:{distance}"
-        return f"W:{distance + 1}"
 
     def _end_episode(self, location: tuple[int, int], reward: float, reason: str) -> StepResult:
         self.done = True
