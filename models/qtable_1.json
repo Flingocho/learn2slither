@@ -1,0 +1,38 @@
+{
+  "config": {
+    "discount_factor": 0.95,
+    "epsilon": 0.9995,
+    "epsilon_decay": 0.9995,
+    "epsilon_min": 0.15,
+    "heuristics_enabled": false,
+    "learning_enabled": true,
+    "learning_rate": 0.3
+  },
+  "q_table": {
+    "S:1|W:8|W:5|W:1": [
+      -90.03,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "W:3|R:3|S:1|W:2": [
+      0.0,
+      0.0,
+      0.0,
+      -0.9299999999999999
+    ],
+    "W:3|S:1|W:6|W:1": [
+      0.0,
+      0.0,
+      0.87,
+      0.0
+    ],
+    "W:4|S:1|W:5|W:2": [
+      -0.9299999999999999,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "version": 1
+}
