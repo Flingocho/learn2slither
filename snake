@@ -1,4 +1,4 @@
-#!/home/flingo/Desktop/Snake/.venv/bin/python
+#!/sgoinfre/students/jvidal-t/learn2slither/.venv/bin/python
 
 from src.cli import main
 

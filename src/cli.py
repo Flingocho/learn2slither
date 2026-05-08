@@ -132,6 +132,15 @@ def main(argv: list[str] | None = None) -> int:
         agent.config.learning_enabled = not args.no_learning
         if args.heuristics:
             agent.config.heuristics_enabled = True
+        # Reapply argument overrides after loading to ensure they take precedence
+        if args.learning_rate is not None:
+            agent.config.learning_rate = args.learning_rate
+        if args.discount_factor is not None:
+            agent.config.discount_factor = args.discount_factor
+        if args.epsilon_min is not None:
+            agent.config.epsilon_min = args.epsilon_min
+        if args.epsilon_decay is not None:
+            agent.config.epsilon_decay = args.epsilon_decay
 
     env = SnakeEnvironment(heuristics_enabled=agent.config.heuristics_enabled, board_size=args.board_size)
     render_enabled = args.visual == "on" and not args.no_render

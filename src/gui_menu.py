@@ -337,6 +337,9 @@ def build_args(options: dict, models: list[Path], selected_model: Optional[int])
         args.extend(["-b", options["board_size"]])
 
     if options["save_model"]:
-        args.extend(["-S", "models/qtable_trained.json"])
+        if selected_model is not None and selected_model < len(models):
+            args.extend(["-S", f"models/{models[selected_model].name}"])
+        else:
+            args.extend(["-S", "models/qtable_trained.json"])
 
     return args

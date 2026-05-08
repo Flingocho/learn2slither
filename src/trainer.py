@@ -79,7 +79,7 @@ class Trainer:
         victories = 0
         total_score = 0
         best_score = 0
-        checkpoint = episodes // 10 if episodes >= 10 else 1
+        checkpoint = 1000
         last_checkpoint = 0
 
         try:
@@ -140,12 +140,13 @@ class Trainer:
                 if learn:
                     self.agent.decay_exploration()
 
-                if not self.quiet and episode - last_checkpoint >= checkpoint and checkpoint > 0:
+                if not self.quiet and checkpoint > 0 and (
+                    episode - last_checkpoint >= checkpoint or episode == episodes
+                ):
                     avg_score = total_score / episode
-                    progress_pct = (episode / episodes) * 100
                     epsilon = self.agent.config.epsilon
                     print(
-                        f"[{progress_pct:5.1f}%] Ep {episode:5d} | Best: {best_score:2d} | "
+                        f"[Every 1k] Ep {episode:7d} | Best: {best_score:2d} | "
                         f"Avg: {avg_score:5.2f} | Wins: {victories:3d} | ε: {epsilon:.3f}"
                     )
                     last_checkpoint = episode
